@@ -1,18 +1,23 @@
 const router = require("express").Router();
 const upload = require("../../middlewares/upload.middleware");
-const { protect } = require("../../middlewares/auth.middleware");
-const { adminOnly } = require("../../middlewares/role.middleware");
+const { adminProtect } = require("../../middlewares/adminAuth");
 
 const {
   createProduct,
   updateProduct,
-  deleteProduct
+   getAllProducts,   
+  getProductById,      
+  getProductStats, 
+  softDeleteProduct
 } = require("../../controllers/admin/adminProductController");
 
-router.use(protect, adminOnly);
+router.use(adminProtect);
+router.get("/", getAllProducts);
+router.get("/stats", getProductStats);
+router.get("/:id", getProductById);
 
 router.post("/", upload.single("image"), createProduct);
 router.put("/:id", upload.single("image"), updateProduct);
-router.delete("/:id", deleteProduct);
+router.delete("/:id", softDeleteProduct);
 
 module.exports = router;

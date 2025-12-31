@@ -1,68 +1,3 @@
-// const User = require("../models/User");
-
-// exports.addToCart = async (req, res, next) => {
-//   try {
-//     const user = req.user;
-//     const { productId } = req.params;
-
-//     const existingItem = user.cart.find(
-//       (i) => i.product.toString() === productId
-//     );
-
-//     if (existingItem) {
-//       existingItem.quantity += 1;
-//     } else {
-//       user.cart.push({ product: productId, quantity: 1 });
-//     }
-
-//     await user.save();
-
-//     res.json({
-//       success: true,
-//       message: "Added to cart",
-//       cart: user.cart
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
-// exports.removeFromCart = async (req, res, next) => {
-//   try {
-//     const user = req.user;
-//     const { productId } = req.params;
-
-//     user.cart = user.cart.filter(
-//       (i) => i.product.toString() !== productId
-//     );
-
-//     await user.save();
-
-//     res.json({
-//       success: true,
-//       message: "Removed from cart",
-//       cart: user.cart
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
-// exports.getCart = async (req, res, next) => {
-//   try {
-//     const userWithCart = await User.findById(req.user._id).populate(
-//       "cart.product"
-//     );
-
-//     res.json({
-//       success: true,
-//       cart: userWithCart.cart
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
 const User = require("../../models/User");
 const Product = require("../../models/Product");
 
@@ -120,10 +55,55 @@ exports.removeFromCart = async (req, res, next) => {
 exports.getCart = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate("cart.product", "name price image");
+      .populate("cart.product", "name price image isDeleted");
+
+    const filteredCart = user.cart.filter(
+      item => item.product && item.product.isDeleted === false
+    );
 
     res.json({
       success: true,
+      cart: filteredCart
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Add this function to cartController.js
+exports.updateCartQuantity = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Quantity must be at least 1" 
+      });
+    }
+
+    const user = req.user;
+    
+    // Find the item in cart
+    const item = user.cart.find(
+      (i) => i.product.toString() === productId
+    );
+
+    if (!item) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Product not found in cart" 
+      });
+    }
+
+    // Update quantity
+    item.quantity = parseInt(quantity);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `Quantity updated to ${quantity}`,
       cart: user.cart
     });
   } catch (err) {

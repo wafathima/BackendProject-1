@@ -1,26 +1,33 @@
-const User = require("../../models/User");
+const Admin = require("../../models/Admin");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-exports.adminLogin = async (req, res, next) => {
+exports.adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const admin = await User.findOne({ email, role: "admin" });
-    if (!admin) return res.status(400).json({ message: "Admin not found" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(400).json({ message: "Admin not found" });
+    }
 
     const match = await bcrypt.compare(password, admin.password);
-    if (!match) return res.status(400).json({ message: "Invalid credentials" });
+    if (!match) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const token = jwt.sign(
-      { id: admin._id, role: admin.role },
+      { id: admin._id, role: "admin" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
     res.json({
       success: true,
-      message: "Admin login successful",
       token,
       admin: {
         id: admin._id,
@@ -28,7 +35,7 @@ exports.adminLogin = async (req, res, next) => {
         email: admin.email,
       },
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    res.status(500).json({ message: "Admin login failed" });
   }
 };

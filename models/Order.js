@@ -1,25 +1,3 @@
-// const mongoose = require("mongoose");
-
-// const orderSchema = new mongoose.Schema({
-//   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  
-//   items: [
-//     {
-//       product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-//       quantity: { type: Number, required: true },
-//       price: { type: Number, required: true }
-//     }
-//   ],
-
-//   totalAmount: { type: Number, required: true },
-
-//   paymentMethod: { type: String, enum: ["COD", "RAZORPAY"] },
-
-//   orderStatus: { type: String, enum: ["PLACED", "PROCESSING", "SHIPPED", "DELIVERED"], default: "PLACED" }
-// }, { timestamps: true });
-
-// module.exports = mongoose.model("Order", orderSchema);
-
 const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema({
@@ -30,16 +8,17 @@ const orderSchema = new mongoose.Schema({
   },
 
   items: [
-    {
-      product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: true
-      },
-      quantity: { type: Number, required: true },
-      price: { type: Number, required: true }
-    }
-  ],
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product"
+    },
+    name: String,
+    image: String,
+    quantity: Number,
+    price: Number
+  }
+],
 
   totalAmount: { type: Number, required: true },
 
@@ -58,7 +37,7 @@ const orderSchema = new mongoose.Schema({
   orderStatus: {
     type: String,
     enum: ["PLACED", "PROCESSING", "SHIPPED", "DELIVERED"],
-    default: "PLACED"
+    default: "PROCESSING"
   }
 
 }, { timestamps: true });
