@@ -1,7 +1,5 @@
-// controllers/admin/adminUserController.js
 const User = require("../../models/User");
 
-// GET all users
 exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find({ role: { $ne: "admin"  } }) 
@@ -14,7 +12,6 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// GET user statistics
 exports.getUserStats = async (req, res, next) => {
   try {
     const totalUsers = await User.countDocuments({ role: { $ne: "admin" }, });
@@ -45,7 +42,6 @@ exports.getUserStats = async (req, res, next) => {
   }
 };
 
-// Block/Unblock user
 exports.toggleBlockUser = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -79,7 +75,6 @@ exports.toggleBlockUser = async (req, res, next) => {
   }
 };
 
-// Update user role
 exports.updateUserRole = async (req, res, next) => {
   try {
     const { id } = req.params;

@@ -40,7 +40,6 @@ app.use("/api/user", require("./routes/user/userRoutes"));
 app.use("/api/admin", require("./routes/admin/adminRoutes"));
 
 
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const errorHandler = require("./middlewares/errorHandler");

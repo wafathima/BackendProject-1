@@ -49,40 +49,6 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// exports.login = async (req, res, next) => {
-//   try {
-//     const { error } = loginSchema.validate(req.body);
-//     if (error) return res.status(400).json({ message: error.details[0].message });
-
-//     const { email, password } = req.body;
-
-//     const user = await User.findOne({ email });
-//     if (!user) return res.status(400).json({ message: "Invalid email or password" });
-
-//     const match = await bcrypt.compare(password, user.password);
-//     if (!match) return res.status(400).json({ message: "Invalid email or password" });
-
-//     const token = jwt.sign(
-//       { id: user._id, role: user.role },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "7d" }
-//     );
-
-//     res.json({
-//       success: true,
-//       message: "Login successful",
-//       token,
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//       },
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
 
 exports.login = async (req, res, next) => {
   try {
@@ -94,7 +60,6 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid email or password" });
 
-    // 🚫 BLOCKED USER CHECK
     if (user.isBlocked) {
       return res.status(403).json({
         message: "Your account has been blocked by admin"
@@ -122,6 +87,56 @@ exports.login = async (req, res, next) => {
       },
     });
   } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { name, phone, address, bio } = req.body; // Remove avatar
+
+    // Build update object without avatar
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone || "";
+    if (address !== undefined) updateData.address = address || "";
+    if (bio !== undefined) updateData.bio = bio || "";
+    // Avatar is removed - we don't handle it anymore
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        address: user.address || "",
+        bio: user.bio || "",
+        role: user.role,
+        wishlist: user.wishlist || [],
+        cart: user.cart || [],
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
+
+  } catch (err) {
+    console.error("Update profile error:", err);
     next(err);
   }
 };

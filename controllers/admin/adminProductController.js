@@ -1,6 +1,5 @@
 const Product = require("../../models/Product");
 
-// GET all products
 exports.getAllProducts = async (req, res, next) => {
   try {
     const products = await Product.find({ isDeleted: { $ne: true } })
@@ -30,7 +29,6 @@ exports.getProductById = async (req, res, next) => {
   }
 };
 
-// GET product stats (optional)
 exports.getProductStats = async (req, res, next) => {
   try {
     const totalProducts = await Product.countDocuments({ isDeleted: { $ne: true } });

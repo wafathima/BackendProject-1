@@ -3,9 +3,14 @@
 // const userSchema = new mongoose.Schema(
 //   {
 //     name: { type: String, required: true },
-
+    
 //     role: { type: String, enum: ["user", "admin"], default: "user" },
-
+    
+//     isBlocked: { type: Boolean, default: false },
+//     blockedAt: { type: Date },
+//     blockedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//     lastLogin: { type: Date },
+//     loginCount: { type: Number, default: 0 },
     
 //     email: {
 //       type: String,
@@ -63,7 +68,6 @@
 
 // module.exports = mongoose.model("User", userSchema);
 
-// models/User.js
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -104,10 +108,11 @@ const userSchema = new mongoose.Schema(
       default: ""
     },
 
-    avatar: {
-      type: String, 
-      default: ""
-    },
+    // REMOVE avatar field since we're using initials
+    // avatar: {
+    //   type: String, 
+    //   default: ""
+    // },
 
     wishlist: [
       {

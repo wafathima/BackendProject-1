@@ -22,6 +22,8 @@ exports.placeOrderCOD = async (req, res) => {
 
     const orderItems = validItems.map(item => ({
       product: item.product._id,
+      name: item.product.name,
+      image: item.product.image,
       quantity: item.quantity,
       price: item.product.price
     }));
@@ -31,10 +33,14 @@ exports.placeOrderCOD = async (req, res) => {
       0
     );
 
+    const shippingFee = totalAmount > 0 ? 5 : 0;
+    const finalTotal = totalAmount + shippingFee;
+
     const order = await Order.create({
       user: user._id,
       items: orderItems,
-      totalAmount,
+      totalAmount: finalTotal,
+      shippingFee,
       paymentMethod: "COD",
       paymentStatus: "PENDING",
       orderStatus: "PROCESSING"
@@ -51,10 +57,9 @@ exports.placeOrderCOD = async (req, res) => {
 
   } catch (err) {
     console.error("ORDER ERROR:", err);
-    res.status(500).json({ message: "Order creation failed" });
+    res.status(500).json({ message: "Order creation failed", error: err.message });
   }
 };
-
 
 exports.verifyRazorpayPayment = async (req, res, next) => {
   try {
@@ -71,43 +76,65 @@ exports.verifyRazorpayPayment = async (req, res, next) => {
       .update(sign)
       .digest("hex");
 
-    if (expected !== razorpay_signature)
-      return res.status(400).json({ message: "Payment verification failed" });
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Payment verification failed" 
+      });
+    }
 
     const user = await User.findById(req.user._id)
       .populate("cart.product");
 
-    const items = user.cart.map(item => ({
+    if (!user || !user.cart.length) {
+      return res.status(400).json({ message: "Cart is empty" });
+    }
+
+    const orderItems = user.cart.map(item => ({
       product: item.product._id,
+      name: item.product.name,
+      image: item.product.image,
       quantity: item.quantity,
       price: item.product.price
     }));
 
-    const totalAmount = items.reduce(
+    const totalAmount = orderItems.reduce(
       (sum, i) => sum + i.price * i.quantity,
       0
     );
 
+    const shippingFee = totalAmount > 0 ? 5 : 0;
+    const finalTotal = totalAmount + shippingFee;
+
     const order = await Order.create({
       user: user._id,
-      items,
-      totalAmount,
+      items: orderItems,
+      totalAmount: finalTotal,
+      shippingFee,
       paymentMethod: "RAZORPAY",
-      paymentStatus: "PAID"
+      paymentStatus: "PAID",
+      orderStatus: "PROCESSING",
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id
     });
 
+    // Clear cart after successful payment
     user.cart = [];
     await user.save();
 
-    res.json({ success: true, order });
+    res.json({ 
+      success: true, 
+      message: "Payment verified and order placed",
+      order 
+    });
   } catch (err) {
+    console.error("Razorpay verification error:", err);
     next(err);
   }
 };
 
 exports.getMyOrders = async (req, res, next) => {
   try {
-    console.log(req.user , "++")
     const orders = await Order.find({ user: req.user._id })
       .populate("items.product", "name price image")
       .sort({ createdAt: -1 });
@@ -117,4 +144,3 @@ exports.getMyOrders = async (req, res, next) => {
     next(err);
   }
 };
-
