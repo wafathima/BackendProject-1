@@ -49,7 +49,6 @@ exports.register = async (req, res, next) => {
   }
 };
 
-
 exports.login = async (req, res, next) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -91,52 +90,3 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.updateProfile = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const { name, phone, address, bio } = req.body; // Remove avatar
-
-    // Build update object without avatar
-    const updateData = {};
-    if (name !== undefined) updateData.name = name;
-    if (phone !== undefined) updateData.phone = phone || "";
-    if (address !== undefined) updateData.address = address || "";
-    if (bio !== undefined) updateData.bio = bio || "";
-    // Avatar is removed - we don't handle it anymore
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: "User not found" 
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Profile updated successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || "",
-        address: user.address || "",
-        bio: user.bio || "",
-        role: user.role,
-        wishlist: user.wishlist || [],
-        cart: user.cart || [],
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    });
-
-  } catch (err) {
-    console.error("Update profile error:", err);
-    next(err);
-  }
-};

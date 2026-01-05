@@ -1,30 +1,25 @@
-// backend/controllers/admin/adminController.js
 const User = require("../../models/User");
 const Order = require("../../models/Order");
 const Product = require("../../models/Product");
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    // Get counts
     const [totalUsers, totalOrders, totalProducts] = await Promise.all([
       User.countDocuments({ role: "user" }),
       Order.countDocuments(),
       Product.countDocuments({ isDeleted: false }),
     ]);
 
-    // Calculate revenue
     const revenueResult = await Order.aggregate([
       { $match: { paymentStatus: "PAID" } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } }
     ]);
 
-    // Get recent orders
-    const recentOrders = await Order.find()
+        const recentOrders = await Order.find()
       .populate("user", "name email")
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Get recent users
     const recentUsers = await User.find({ role: "user" })
       .sort({ createdAt: -1 })
       .limit(5);

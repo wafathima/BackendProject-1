@@ -11,7 +11,6 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
-// GET single product
 exports.getProductById = async (req, res, next) => {
   try {
     const product = await Product.findOne({
@@ -120,7 +119,6 @@ exports.updateProduct = async (req, res, next) => {
 };
 
 
-// SOFT DELETE product
 exports.softDeleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByIdAndUpdate(

@@ -1,4 +1,3 @@
-// routes/admin/adminUserRoutes.js
 const router = require("express").Router();
 const { adminProtect } = require("../../middlewares/adminAuth");
 const {

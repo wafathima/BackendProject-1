@@ -70,7 +70,6 @@ exports.getCart = async (req, res, next) => {
   }
 };
 
-// Add this function to cartController.js
 exports.updateCartQuantity = async (req, res, next) => {
   try {
     const { productId } = req.params;
@@ -85,7 +84,6 @@ exports.updateCartQuantity = async (req, res, next) => {
 
     const user = req.user;
     
-    // Find the item in cart
     const item = user.cart.find(
       (i) => i.product.toString() === productId
     );
@@ -97,7 +95,6 @@ exports.updateCartQuantity = async (req, res, next) => {
       });
     }
 
-    // Update quantity
     item.quantity = parseInt(quantity);
     await user.save();
 

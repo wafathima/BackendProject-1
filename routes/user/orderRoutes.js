@@ -13,14 +13,11 @@ const {
 
 router.use(userProtect);
 
-// COD Order
 router.post("/place", placeOrderCOD);
 
-// Razorpay routes
 router.post("/razorpay/create", createRazorpayOrder);
 router.post("/razorpay/verify", verifyRazorpayPayment);
 
-// Get user orders
 router.get("/my", getMyOrders);
 
 module.exports = router;

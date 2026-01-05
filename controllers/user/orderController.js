@@ -118,7 +118,6 @@ exports.verifyRazorpayPayment = async (req, res, next) => {
       razorpayPaymentId: razorpay_payment_id
     });
 
-    // Clear cart after successful payment
     user.cart = [];
     await user.save();
 

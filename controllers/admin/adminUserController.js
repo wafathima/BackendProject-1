@@ -100,7 +100,6 @@ exports.updateUserRole = async (req, res, next) => {
   }
 };
 
-// Delete user (soft delete)
 exports.deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
