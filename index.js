@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const connectDB = require("./config/db");
 
+
 const app = express();
 connectDB();
 
@@ -41,6 +42,8 @@ app.use("/api/admin", require("./routes/admin/adminRoutes"));
 
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
 
 const errorHandler = require("./middlewares/errorHandler");
 app.use(errorHandler);

@@ -1,6 +1,7 @@
 const Order = require("../../models/Order");
 const User = require("../../models/User");
-const crypto = require("crypto");
+
+const { paypalClient, paypal } = require('../../config/paypal');
 
 exports.placeOrderCOD = async (req, res) => {
   try {
@@ -43,7 +44,7 @@ exports.placeOrderCOD = async (req, res) => {
       shippingFee,
       paymentMethod: "COD",
       paymentStatus: "PENDING",
-      orderStatus: "PROCESSING"
+      orderStatus: "PENDING"  
     });
 
     user.cart = [];
@@ -61,36 +62,22 @@ exports.placeOrderCOD = async (req, res) => {
   }
 };
 
-exports.verifyRazorpayPayment = async (req, res, next) => {
+exports.capturePayPalPayment = async (req, res) => {
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    } = req.body;
+    const { orderID } = req.body;
 
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const request = new paypal.orders.OrdersCaptureRequest(orderID);
+    request.requestBody({});
 
-    const expected = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(sign)
-      .digest("hex");
+    const capture = await paypalClient.execute(request);
 
-    if (expected !== razorpay_signature) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Payment verification failed" 
-      });
+    if (capture.result.status !== "COMPLETED") {
+      return res.status(400).json({ success: false });
     }
 
-    const user = await User.findById(req.user._id)
-      .populate("cart.product");
+    const user = await User.findById(req.user._id).populate("cart.product");
 
-    if (!user || !user.cart.length) {
-      return res.status(400).json({ message: "Cart is empty" });
-    }
-
-    const orderItems = user.cart.map(item => ({
+    const items = user.cart.map(item => ({
       product: item.product._id,
       name: item.product.name,
       image: item.product.image,
@@ -98,39 +85,37 @@ exports.verifyRazorpayPayment = async (req, res, next) => {
       price: item.product.price
     }));
 
-    const totalAmount = orderItems.reduce(
-      (sum, i) => sum + i.price * i.quantity,
-      0
-    );
-
-    const shippingFee = totalAmount > 0 ? 5 : 0;
-    const finalTotal = totalAmount + shippingFee;
+    const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const shippingFee = total > 0 ? 5 : 0;
 
     const order = await Order.create({
       user: user._id,
-      items: orderItems,
-      totalAmount: finalTotal,
+      items,
+      totalAmount: total + shippingFee,
       shippingFee,
-      paymentMethod: "RAZORPAY",
+      paymentMethod: "PAYPAL",
       paymentStatus: "PAID",
       orderStatus: "PROCESSING",
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id
+      paypalOrderId: orderID,
+      paypalCaptureId: capture.result.purchase_units[0].payments.captures[0].id,
+      paypalPaymentId: capture.result.id
     });
 
     user.cart = [];
     await user.save();
 
-    res.json({ 
-      success: true, 
-      message: "Payment verified and order placed",
-      order 
+    res.json({
+      success: true,
+      paymentId: order.paypalPaymentId,
+      order
     });
+
   } catch (err) {
-    console.error("Razorpay verification error:", err);
-    next(err);
+    console.error(err);
+    res.status(500).json({ success: false });
   }
 };
+
 
 exports.getMyOrders = async (req, res, next) => {
   try {

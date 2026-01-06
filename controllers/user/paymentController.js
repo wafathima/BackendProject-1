@@ -1,10 +1,10 @@
 const User = require("../../models/User");
-const razorpay = require("../../config/razorpay");
+const { paypal, paypalClient } = require("../../config/paypal");
+ 
 
-exports.createRazorpayOrder = async (req, res, next) => {
+exports.createPayPalOrder = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id)
-      .populate("cart.product");
+    const user = await User.findById(req.user._id).populate("cart.product");
 
     if (!user || !user.cart.length) {
       return res.status(400).json({ 
@@ -26,24 +26,33 @@ exports.createRazorpayOrder = async (req, res, next) => {
     }
 
     const shippingFee = totalAmount > 0 ? 5 : 0;
-    const finalTotal = (totalAmount + shippingFee) * 100; 
+    const finalTotal = (totalAmount + shippingFee).toFixed(2); 
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: finalTotal,
-      currency: "INR",
-      receipt: `order_${Date.now()}_${req.user._id}`,
-      notes: {
-        userId: req.user._id.toString()
+    const request = new paypal.orders.OrdersCreateRequest();
+request.prefer("return=representation");
+request.requestBody({
+  intent: "CAPTURE",
+  purchase_units: [
+    {
+      amount: {
+        currency_code: "USD",
+        value: finalTotal
       }
+    }
+  ]
+});
+
+const order = await paypalClient.execute(request);
+
+
+    res.status(201).json({
+      success: true,
+      orderId: order.result.id,
+      amount: finalTotal
     });
 
-    res.json({
-      success: true,
-      order: razorpayOrder,
-      amount: finalTotal / 100 
-    });
   } catch (err) {
-    console.error("Razorpay order creation error:", err);
+    console.error("PayPal order creation error:", err);
     next(err);
   }
 };

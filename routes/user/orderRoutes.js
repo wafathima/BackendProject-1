@@ -3,20 +3,20 @@ const { userProtect } = require("../../middlewares/userAuth");
 
 const {
   placeOrderCOD,
-  verifyRazorpayPayment,
+  capturePayPalPayment,
   getMyOrders
 } = require("../../controllers/user/orderController");
 
 const {
-  createRazorpayOrder
+  createPayPalOrder
 } = require("../../controllers/user/paymentController");
 
 router.use(userProtect);
 
 router.post("/place", placeOrderCOD);
 
-router.post("/razorpay/create", createRazorpayOrder);
-router.post("/razorpay/verify", verifyRazorpayPayment);
+router.post("/paypal/create", createPayPalOrder); 
+router.post("/paypal/capture", capturePayPalPayment);
 
 router.get("/my", getMyOrders);
 

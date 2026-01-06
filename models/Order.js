@@ -20,13 +20,14 @@ const orderSchema = new mongoose.Schema({
     }
   ],
 
+
   totalAmount: { type: Number, required: true },
   
   shippingFee: { type: Number, default: 0 },
 
   paymentMethod: {
     type: String,
-    enum: ["COD", "RAZORPAY"],
+    enum: ["COD", "PAYPAL"],
     required: true
   },
 
@@ -42,10 +43,9 @@ const orderSchema = new mongoose.Schema({
     default: "PENDING"
   },
 
-  razorpayOrderId: String,
-  razorpayPaymentId: String,
-  razorpaySignature: String,
-
+  paypalOrderId: String,
+  paypalPaymentId: String,
+  paypalCaptureId: String,
 
 
 }, { timestamps: true });
