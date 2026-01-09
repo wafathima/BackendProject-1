@@ -1,8 +1,6 @@
 const User = require("../../models/User");
 const bcrypt = require("bcrypt");
 
-
-
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
@@ -21,8 +19,6 @@ exports.getProfile = async (req, res) => {
     });
   }
 };
-
-
 
 
 exports.updateProfile = async (req, res) => {

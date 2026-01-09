@@ -20,10 +20,14 @@ const orderSchema = new mongoose.Schema({
     }
   ],
 
-
   totalAmount: { type: Number, required: true },
   
   shippingFee: { type: Number, default: 0 },
+
+  shippingAddress: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
 
   paymentMethod: {
     type: String,
@@ -46,7 +50,6 @@ const orderSchema = new mongoose.Schema({
   paypalOrderId: String,
   paypalPaymentId: String,
   paypalCaptureId: String,
-
 
 }, { timestamps: true });
 

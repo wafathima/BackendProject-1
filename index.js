@@ -10,9 +10,7 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  origin: [ "http://localhost:3000",
-    "https://playora-ixsyqp8at-wafathimas-projects.vercel.app/"
-  ],
+  origin: "*",
   credentials: true
 }));
 
@@ -50,9 +48,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const errorHandler = require("./middlewares/errorHandler");
 app.use(errorHandler);
 
-app.get("/", (req, res) => {
-  res.send("Backend is working!"); 
-});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

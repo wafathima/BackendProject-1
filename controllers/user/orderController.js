@@ -6,6 +6,8 @@ const { paypalClient, paypal } = require('../../config/paypal');
 exports.placeOrderCOD = async (req, res) => {
   try {
     const user = req.user;
+    const { address } = req.body;
+
 
     if (!user || !user.cart || user.cart.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
@@ -37,6 +39,8 @@ exports.placeOrderCOD = async (req, res) => {
     const shippingFee = totalAmount > 0 ? 5 : 0;
     const finalTotal = totalAmount + shippingFee;
 
+    const shippingAddress = address || null;
+
     const order = await Order.create({
       user: user._id,
       items: orderItems,
@@ -44,11 +48,14 @@ exports.placeOrderCOD = async (req, res) => {
       shippingFee,
       paymentMethod: "COD",
       paymentStatus: "PENDING",
-      orderStatus: "PENDING"  
+      orderStatus: "PENDING",
+      shippingAddress: shippingAddress
     });
 
     user.cart = [];
     await user.save();
+
+    console.log("Order created successfully:", order._id); 
 
     res.status(201).json({
       success: true,
@@ -57,14 +64,21 @@ exports.placeOrderCOD = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("ORDER ERROR:", err);
-    res.status(500).json({ message: "Order creation failed", error: err.message });
+    console.error("ORDER ERROR DETAILS:", {
+      message: err.message,
+      errors: err.errors,
+      stack: err.stack
+    });
+    res.status(500).json({ 
+      message: "Order creation failed", 
+      error: err.message 
+    });
   }
 };
 
 exports.capturePayPalPayment = async (req, res) => {
   try {
-    const { orderID } = req.body;
+    const { orderID, address } = req.body;
 
     const request = new paypal.orders.OrdersCaptureRequest(orderID);
     request.requestBody({});
@@ -98,7 +112,8 @@ exports.capturePayPalPayment = async (req, res) => {
       orderStatus: "PROCESSING",
       paypalOrderId: orderID,
       paypalCaptureId: capture.result.purchase_units[0].payments.captures[0].id,
-      paypalPaymentId: capture.result.id
+      paypalPaymentId: capture.result.id,
+      shippingAddress: address || null
     });
 
     user.cart = [];
@@ -115,7 +130,6 @@ exports.capturePayPalPayment = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
-
 
 exports.getMyOrders = async (req, res, next) => {
   try {
