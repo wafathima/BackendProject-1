@@ -10,7 +10,9 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  origin: "*",
+  origin: [ "http://localhost:3000",
+    "https://playora-ixsyqp8at-wafathimas-projects.vercel.app/"
+  ],
   credentials: true
 }));
 
